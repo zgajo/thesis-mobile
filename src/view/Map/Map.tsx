@@ -1,18 +1,48 @@
 import { StatusBar } from 'expo-status-bar';
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Image, StyleSheet, View } from 'react-native';
-import MapView, { MAP_TYPES, Marker, PROVIDER_DEFAULT, UrlTile } from 'react-native-maps';
+import MapView, {
+  MAP_TYPES,
+  Marker,
+  PROVIDER_DEFAULT,
+  UrlTile,
+} from 'react-native-maps';
 import { getStatusBarHeight } from 'react-native-status-bar-height';
+import * as Location from 'expo-location';
 
 const STATUS_BAR_HEIGHT = getStatusBarHeight();
 
 export default function Map() {
   const map = useRef<MapView>(null);
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null
+  );
+
+  const getLocation = () => {
+    Location.getForegroundPermissionsAsync().then((result) => {
+      console.log(result.granted);
+      if (result.granted) {
+        (async () => {
+          try {
+            let location = await Location.getCurrentPositionAsync({});
+            setLocation(location);
+            
+          } catch (error) {
+            console.log(error);
+          }
+        })();
+      }
+    }).catch(console.log);
+  };
+
+  useEffect(getLocation, []);
+
+  console.log("location:",location);
 
   return (
     <View style={styles.container}>
       <StatusBar style="auto" translucent backgroundColor="transparent" />
-     
+
       <MapView
         ref={map}
         // provider={PROVIDER_DEFAULT} // remove if not using Google Maps
@@ -21,8 +51,8 @@ export default function Map() {
         showsUserLocation={true}
         showsMyLocationButton={true}
         region={{
-          latitude: 37.78825,
-          longitude: -122.4324,
+          latitude: location ? location.coords.latitude : 37.78825,
+          longitude: location ? location.coords.longitude :  -122.4324,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
@@ -70,6 +100,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
+    // marginTop: STATUS_BAR_HEIGHT,
   },
   map: {
     ...StyleSheet.absoluteFillObject,
