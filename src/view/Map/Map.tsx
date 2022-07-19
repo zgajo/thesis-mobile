@@ -14,8 +14,11 @@ const STATUS_BAR_HEIGHT = getStatusBarHeight();
 
 export default function Map() {
   const map = useRef<MapView>(null);
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null
+  const [location, setLocation] = useState<{latitude: number; longitude: number}>(
+    {
+      latitude: 37.78825,
+          longitude: -122.4324,
+    }
   );
 
   const getLocation = () => {
@@ -25,7 +28,11 @@ export default function Map() {
         (async () => {
           try {
             let location = await Location.getCurrentPositionAsync({});
-            setLocation(location);
+            
+            setLocation({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude
+            });
             
           } catch (error) {
             console.log(error);
@@ -51,8 +58,7 @@ export default function Map() {
         showsUserLocation={true}
         showsMyLocationButton={true}
         region={{
-          latitude: location ? location.coords.latitude : 37.78825,
-          longitude: location ? location.coords.longitude :  -122.4324,
+          ...location,
           latitudeDelta: 0.0922,
           longitudeDelta: 0.0421,
         }}
@@ -78,10 +84,7 @@ export default function Map() {
         onPress={() => {
           if (map.current) {
             map.current.animateCamera({
-              center: {
-                latitude: 37.78825,
-                longitude: -122.4324,
-              },
+              center: location,
               heading: 0,
               pitch: 90,
               zoom: 20,
